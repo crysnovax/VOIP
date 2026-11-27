@@ -1,0 +1,16 @@
+{
+  "name": "@crysnova/voip-core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Private experimental core for the CODY AI WhatsApp VOIP project",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

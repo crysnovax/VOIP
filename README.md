@@ -22,3 +22,9 @@ This repository is documentation and future VOIP-specific implementation space. 
 ## Project principle
 
 Build one reliable loop at a time. A ten-call audio proof is more valuable than an impressive but untested video demo.
+
+## First executable step
+
+The repository now contains a private, dependency-free internal package named `@crysnova/voip-core`. It models incoming and outgoing call lifecycles and provides a bounded PCM queue. Run `npm test` from the repository root. This core is deliberately not published to NPM yet; real Baileys, tinyasr, and TTS contracts must be verified first.
+
+See [`docs/NEXT_STEP.md`](./docs/NEXT_STEP.md) for the missing adapters and the integration order.
