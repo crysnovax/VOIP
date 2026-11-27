@@ -1,14 +1,14 @@
 {
-  "name": "@crysnova/voip-core",
+  "name": "voip-workspace",
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Private experimental core for the CODY AI WhatsApp VOIP project",
-  "exports": {
-    ".": "./src/index.mjs"
-  },
+  "description": "CODY AI VOIP monorepo and plogme-voip facade",
+  "workspaces": ["packages/*"],
   "scripts": {
-    "test": "node --test"
+    "test": "node --test packages/*/*.test.mjs test/*.test.mjs",
+    "test:core": "node --test packages/voip-core/*.test.mjs",
+    "test:facade": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=20"

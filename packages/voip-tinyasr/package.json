@@ -1,0 +1,10 @@
+{
+  "name": "@crysnova/voip-tinyasr",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "tinyasr event adapter for streaming Float32 PCM recognition",
+  "exports": {
+    ".": "./src/index.mjs"
+  }
+}

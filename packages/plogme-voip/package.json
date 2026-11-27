@@ -1,0 +1,24 @@
+{
+  "name": "plogme-voip",
+  "version": "0.1.0-beta.0",
+  "private": true,
+  "type": "module",
+  "description": "Reusable WhatsApp VoIP capability for CODY and compatible bots",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "dependencies": {
+    "@crysnova/voip-core": "0.0.1",
+    "@crysnova/voip-plogme": "0.0.1",
+    "@crysnova/voip-tinyasr": "0.0.1",
+    "@crysnova/voip-tts": "0.0.1"
+  },
+  "peerDependencies": {
+    "plogme": ">=2.2.11"
+  },
+  "peerDependenciesMeta": {
+    "plogme": {
+      "optional": true
+    }
+  }
+}

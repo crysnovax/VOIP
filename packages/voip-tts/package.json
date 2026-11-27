@@ -1,0 +1,10 @@
+{
+  "name": "@crysnova/voip-tts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "TTS stream contract and output normalization for CODY VOIP",
+  "exports": {
+    ".": "./src/index.mjs"
+  }
+}

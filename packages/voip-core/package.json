@@ -1,0 +1,10 @@
+{
+  "name": "@crysnova/voip-core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Provider-neutral call-local state and audio queue primitives",
+  "exports": {
+    ".": "./src/index.mjs"
+  }
+}
