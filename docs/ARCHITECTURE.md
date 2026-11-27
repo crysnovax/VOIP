@@ -12,6 +12,8 @@ Connect WhatsApp audio to CODY without coupling every subsystem together:
 
 Owns allowlisting, answer/reject policy, one-call capacity, call timeout, lifecycle events, and cleanup. It must be able to stop a call even when ASR, LLM, or TTS is stuck.
 
+It supports both directions. For an incoming call it validates the caller and answers or rejects the call. For an outgoing call it validates the destination, starts the call through the Baileys VOIP client, waits for the connected event, and then attaches the same inbound-ASR and outbound-audio pipeline. The media pipeline should not care who initiated the call.
+
 ### 2. PCM normalizer
 
 Receives inbound Float32 frames from `ActiveCall`. Records the actual sample rate, channel count, and frame size. If tinyasr or TTS requires a different format, resamples explicitly. Every conversion is observable and testable.
@@ -79,6 +81,12 @@ asr.on('turnEnd', async ({ text }) => {
 });
 
 const activeCall = await voip.answerIncomingCall(callId, {
+  audioSource: outbound
+});
+
+// Outgoing calls use the same media pipeline after connection.
+// The exact initiation method must be verified against the pinned Baileys API.
+const outgoingCall = await voip.startOutgoingCall(destination, {
   audioSource: outbound
 });
 
