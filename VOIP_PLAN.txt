@@ -12,6 +12,12 @@ Build a phone-call interface for CODY AI. A person calls CODY on WhatsApp from a
 
 The first successful target is AUDIO ONLY. Video is a later project and must not block the audio milestone.
 
+CODY OWNERSHIP MODEL
+--------------------
+CODY is the WhatsApp bot, the authenticated session owner, and the bridge between the caller and this system. The caller does not communicate with a separate VOIP bot. CODY receives the call through its existing WhatsApp session, applies its caller policy, passes call audio through the VOIP capability, gives recognized turns to CODY's existing response logic, and sends the resulting spoken response back into the call.
+
+The VOIP repository and its future internal package are supporting infrastructure for CODY. They own call-local mechanics such as PCM transport, call state, tinyasr/TTS adapters, turn timing, interruption, and cleanup. They must not create a second WhatsApp session, assistant identity, command system, or independent conversation history.
+
 NON-NEGOTIABLE RULES
 --------------------
 1. Never commit WhatsApp auth state, session IDs, API keys, tokens, call recordings, or private phone numbers.
@@ -62,7 +68,7 @@ SYSTEM ARCHITECTURE
                               |
                          WhatsApp caller
 
-The modules must communicate through small interfaces. Do not let WhatsApp, tinyasr, an LLM, and a TTS provider call each other's internals directly.
+The modules must communicate through small interfaces. Do not let WhatsApp, tinyasr, an LLM, and a TTS provider call each other's internals directly. CODY remains the integration point and response owner.
 
 CORE INTERFACES
 ---------------
@@ -212,10 +218,11 @@ Exit condition:
 Stage 5 - CODY reasoning
 
 Goal:
-- Replace the fixed phrase map with the existing CODY/LLM response path.
+- Replace the fixed phrase map with CODY's existing response path. The VOIP capability supplies the recognized call turn to CODY and speaks the response CODY returns.
 
 Steps:
-- Add a call-specific conversation state with a strict context limit.
+- Add call-local state without creating a second CODY identity or unrelated conversation system.
+- Pass the committed caller turn through CODY's existing response logic with a strict context limit.
 - Keep phone-call prompts separate from normal chat history unless explicitly requested.
 - Add timeout, fallback, and provider-error responses.
 - Never expose raw provider errors to the caller.

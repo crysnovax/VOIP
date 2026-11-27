@@ -19,6 +19,15 @@
 - **Decision:** Prefer local/open-source components and free development resources, but document every dependency whose free tier or hosting is uncertain.
 - **Reason:** Honest planning prevents a later surprise bill.
 
+## D-004 — CODY remains the bridge and owner
+
+- **Date:** 2026-11-27
+- **Decision:** CODY remains the WhatsApp bot, authenticated session owner, caller-facing bridge, response generator, and owner of the user relationship. VOIP is an internal capability that CODY invokes for call media and call-local state.
+- **Alternatives considered:** Building a separate VOIP bot or separate WhatsApp session.
+- **Reason:** CODY already has the session, identity, command system, response logic, and existing integrations. Creating another bot would duplicate state and make the system harder to reason about.
+- **Evidence:** Existing CODY session and `.voipready` flow; corrected architecture discussion on 2026-11-27.
+- **Revisit when:** The first CODY-integrated phone call is implemented and tested.
+
 ## Template
 
 ### D-XXX — title
