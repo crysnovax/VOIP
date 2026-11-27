@@ -2,15 +2,15 @@
 
 ## Goal
 
-Connect WhatsApp audio to CODY without coupling every subsystem together:
+CODY remains the WhatsApp bot, session owner, caller-facing bridge, and response owner. The VOIP subsystem is an internal capability that CODY invokes for call media and call-local state. It must not become a second WhatsApp bot or a replacement for CODY:
 
 `WhatsApp/WebRTC -> Baileys ActiveCall -> PCM normalizer -> tinyasr -> turn controller -> CODY/LLM -> TTS -> bounded PCM queue -> Baileys AudioFeeder -> WhatsApp/WebRTC`
 
 ## Components
 
-### 1. Call manager
+### 1. CODY integration and call manager
 
-Owns allowlisting, answer/reject policy, one-call capacity, call timeout, lifecycle events, and cleanup. It must be able to stop a call even when ASR, LLM, or TTS is stuck.
+ CODY supplies the authenticated WhatsApp session, caller identity, command/configuration context, and response-generation path. The call manager is a CODY-owned subsystem responsible for allowlisting, answer/reject policy, one-call capacity, call timeout, lifecycle events, and cleanup. It must be able to stop a call even when ASR, LLM, or TTS is stuck.
 
 It supports both directions. For an incoming call it validates the caller and answers or rejects the call. For an outgoing call it validates the destination, starts the call through the Baileys VOIP client, waits for the connected event, and then attaches the same inbound-ASR and outbound-audio pipeline. The media pipeline should not care who initiated the call.
 
@@ -37,9 +37,9 @@ Buffers committed text into a call turn, waits for end-of-turn, prevents duplica
 
 `idle -> listening -> thinking -> speaking -> interrupted -> listening -> ended`
 
-### 5. Response engine
+### 5. CODY response bridge
 
-Starts with deterministic test responses. Then it can call the existing CODY reasoning path with a strict call context, timeout, maximum response length, and fallback message.
+Starts with deterministic test responses. Then it calls the existing CODY reasoning path with a strict call context, timeout, maximum response length, and fallback message. The VOIP subsystem does not create a separate assistant personality or session; it hands a committed caller turn to CODY and receives the response to speak.
 
 ### 6. TTS adapter
 

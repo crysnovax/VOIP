@@ -1,6 +1,6 @@
 # CODY AI VOIP
 
-A living engineering notebook for giving CODY AI a WhatsApp voice-call interface, starting with incoming and outgoing audio calls and leaving video for a later phase.
+A living engineering notebook for adding a WhatsApp voice-call capability inside CODY AI, starting with incoming and outgoing audio calls and leaving video for a later phase. CODY remains the bot, WhatsApp session owner, caller-facing bridge, and response generator; VOIP is a subsystem CODY controls.
 
 ## Honest feasibility statement
 
@@ -17,7 +17,7 @@ The design is technically plausible. The critical path is not the idea; it is pr
 
 ## Repository boundary
 
-This repository is documentation and future VOIP-specific implementation space. Do not modify CODY or Baileys from this repository unless a later task explicitly requests implementation work. Keep secrets, WhatsApp auth state, recordings, and private transcripts out of Git.
+This repository is documentation and future VOIP-specific implementation space. It describes a subsystem that will eventually be called by CODY. Do not modify CODY or Baileys from this repository unless a later task explicitly requests implementation work. Keep secrets, WhatsApp auth state, recordings, and private transcripts out of Git.
 
 ## Project principle
 
