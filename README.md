@@ -14,6 +14,7 @@ The design is technically plausible. The critical path is not the idea; it is pr
 4. Use [`docs/TEST_PLAN.md`](./docs/TEST_PLAN.md) for every phone test.
 5. Record important discoveries in [`docs/DECISIONS.md`](./docs/DECISIONS.md) and [`docs/EXPERIMENTS.md`](./docs/EXPERIMENTS.md).
 6. Review [`docs/RISKS_AND_LIMITS.md`](./docs/RISKS_AND_LIMITS.md) before promising a capability.
+7. Read [`docs/PACKAGE_STRATEGY.md`](./docs/PACKAGE_STRATEGY.md) for the reusable package boundaries.
 
 ## Repository boundary
 

@@ -28,6 +28,15 @@
 - **Evidence:** Existing CODY session and `.voipready` flow; corrected architecture discussion on 2026-11-27.
 - **Revisit when:** The first CODY-integrated phone call is implemented and tested.
 
+## D-005 — Reusable capability, layered packages
+
+- **Date:** 2026-11-27
+- **Decision:** Make VOIP reusable through a layered design: a provider-neutral core, a Plogme/WhatsApp transport adapter, optional ASR/TTS adapters, and a thin CODY integration layer.
+- **Alternatives considered:** One large public package containing CODY logic, Plogme, tinyasr, TTS, and all provider code; or copying VOIP code into each bot.
+- **Reason:** Other bots should reuse the call capability without importing CODY-specific behavior, while CODY remains the session and response owner. Do not publish until real phone tests validate the contracts.
+- **Evidence:** Package strategy documented in `docs/PACKAGE_STRATEGY.md`.
+- **Revisit when:** The first real CODY integration and transport adapter are working.
+
 ## Template
 
 ### D-XXX — title
