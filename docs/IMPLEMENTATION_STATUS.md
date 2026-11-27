@@ -28,6 +28,8 @@ The adapter is based on the local `crysnovax/baileys` VOIP implementation:
 
 The CODY `.voipready` command confirms the intended session ownership model, but CODY itself has not been modified by this repository.
 
+The package now includes a real WASM path in `packages/voip-tinyasr/src/wasm.mjs`. It has been exercised against the current `crysnovax/tinyasr` artifacts: version 6, the `en-ru-uk` model, Silero VAD, a live session, Float32 PCM push, and cleanup.
+
 ## Intentionally not claimed yet
 
 - A working native tinyasr loader for every operating system.
@@ -39,4 +41,4 @@ The CODY `.voipready` command confirms the intended session ownership model, but
 
 ## Next integration gate
 
-Build a real tinyasr session factory or bridge, then run a controlled Baileys phone smoke test using the same facade. Only after that should CODY import the package or the package be published publicly.
+Connect the tested WASM adapter to a controlled Baileys phone smoke test using the same facade. The native path can follow through an N-API/shared-library bridge or a helper process. Only after the phone test should CODY import the package or the package be published publicly.

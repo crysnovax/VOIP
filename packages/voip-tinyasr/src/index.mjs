@@ -94,3 +94,4 @@ export class TinyAsrAdapter {
 
 export { normalizeEvents, normalizeEvent, wordsToText };
 export const createTinyAsrAdapter = options => new TinyAsrAdapter(options);
+export { TinyAsrWasmModel, TinyAsrWasmSession, TinyAsrWasmAdapter, createTinyAsrWasmAdapter } from './wasm.mjs';

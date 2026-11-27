@@ -186,6 +186,6 @@ export class PlogmeVoip extends EventEmitter {
 
 export const createPlogmeVoip = options => new PlogmeVoip(options);
 export { PlogmeTransport } from '@crysnova/voip-plogme';
-export { TinyAsrAdapter } from '@crysnova/voip-tinyasr';
+export { TinyAsrAdapter, TinyAsrWasmModel, TinyAsrWasmSession, TinyAsrWasmAdapter, createTinyAsrWasmAdapter } from '@crysnova/voip-tinyasr';
 export { TtsAdapter } from '@crysnova/voip-tts';
 export { CallSession, BoundedPcmQueue } from '@crysnova/voip-core';
