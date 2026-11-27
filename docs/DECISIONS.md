@@ -37,6 +37,15 @@
 - **Evidence:** Package strategy documented in `docs/PACKAGE_STRATEGY.md`.
 - **Revisit when:** The first real CODY integration and transport adapter are working.
 
+## D-006 — One monorepo with an umbrella package
+
+- **Date:** 2026-11-27
+- **Decision:** Keep the VOIP layers in one repository and expose one main installable facade package, tentatively named `plogme-voip`. The internal core, Plogme transport, ASR, and TTS modules should initially be workspace modules rather than four separately maintained public repositories.
+- **Alternatives considered:** Making CODY install and coordinate four independent public packages immediately.
+- **Reason:** One repository is cheaper to maintain, easier for one AI agent to debug, and still preserves reusable internal boundaries. CODY gets one simple dependency while advanced users can later access individual layers if they become stable and useful.
+- **Evidence:** Package strategy updated with the monorepo/facade model.
+- **Revisit when:** The first real phone integration reveals whether any internal layer needs independent publication.
+
 ## Template
 
 ### D-XXX — title
