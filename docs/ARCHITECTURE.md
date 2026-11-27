@@ -1,0 +1,92 @@
+# Architecture
+
+## Goal
+
+Connect WhatsApp audio to CODY without coupling every subsystem together:
+
+`WhatsApp/WebRTC -> Baileys ActiveCall -> PCM normalizer -> tinyasr -> turn controller -> CODY/LLM -> TTS -> bounded PCM queue -> Baileys AudioFeeder -> WhatsApp/WebRTC`
+
+## Components
+
+### 1. Call manager
+
+Owns allowlisting, answer/reject policy, one-call capacity, call timeout, lifecycle events, and cleanup. It must be able to stop a call even when ASR, LLM, or TTS is stuck.
+
+### 2. PCM normalizer
+
+Receives inbound Float32 frames from `ActiveCall`. Records the actual sample rate, channel count, and frame size. If tinyasr or TTS requires a different format, resamples explicitly. Every conversion is observable and testable.
+
+### 3. tinyasr adapter
+
+A narrow Node adapter around tinyasr native or WASM APIs. It accepts PCM chunks and emits normalized events:
+
+```js
+{ type: 'partial', text, confidence?, words? }
+{ type: 'commit', text, confidence?, words? }
+{ type: 'turnEnd', text? }
+{ type: 'language', language }
+```
+
+The adapter must be replaceable. The rest of CODY should not depend on Rust symbols or tinyasr JSON details.
+
+### 4. Turn controller
+
+Buffers committed text into a call turn, waits for end-of-turn, prevents duplicate responses, and handles caller interruption. It owns the state machine:
+
+`idle -> listening -> thinking -> speaking -> interrupted -> listening -> ended`
+
+### 5. Response engine
+
+Starts with deterministic test responses. Then it can call the existing CODY reasoning path with a strict call context, timeout, maximum response length, and fallback message.
+
+### 6. TTS adapter
+
+Converts response text into the exact outbound PCM format required by the active call. The adapter must support streaming chunks or a temporary local file converted into a stream. It must expose cancellation.
+
+### 7. Audio queue
+
+A bounded queue between TTS and `AudioFeeder`. It prevents unlimited memory growth, supports cancellation on barge-in, and reports underruns/overruns. A response cannot begin until the call is connected.
+
+## Invariants
+
+- One active call has one call context and one cleanup owner.
+- One committed caller turn causes at most one response.
+- A canceled response cannot continue writing audio.
+- All timers are cleared during cleanup.
+- No provider credential enters a transcript or log.
+- Content recording is disabled unless explicitly enabled for a local experiment.
+
+## Minimal proof-of-concept pseudocode
+
+```js
+const outbound = new PassThrough({ highWaterMark: 64 * 1024 });
+const queue = new BoundedPcmQueue(outbound, { maxBytes: 2 * 1024 * 1024 });
+
+call.on('audio', frame => {
+  const pcm = normalizeInbound(frame, callFormat);
+  asr.push(pcm);
+});
+
+asr.on('turnEnd', async ({ text }) => {
+  if (!text || turnController.busy) return;
+  turnController.busy = true;
+  try {
+    const reply = await responseEngine.reply(text, { timeoutMs: 12_000 });
+    await tts.stream(reply, chunk => queue.push(chunk));
+  } finally {
+    turnController.busy = false;
+  }
+});
+
+const activeCall = await voip.answerIncomingCall(callId, {
+  audioSource: outbound
+});
+
+activeCall.on('ended', () => {
+  asr.stop();
+  queue.cancel();
+  cleanupCallResources();
+});
+```
+
+This is a design sketch, not a claim that these exact option names are already production-ready.

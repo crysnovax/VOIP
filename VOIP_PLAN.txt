@@ -1,0 +1,336 @@
+CODY AI VOIP PROJECT BLUEPRINT
+================================
+
+Status: planning reference
+Owner: CRYSNOVA / CODY AI
+Created: 2026-11-27
+Repository: crysnovax/VOIP
+
+PURPOSE
+-------
+Build a phone-call interface for CODY AI. A person calls CODY on WhatsApp from a normal phone. CODY answers, receives the caller's audio, transcribes the speech in near real time, decides when the caller has finished a turn, generates a response, converts the response to speech, and sends the speech back into the same WhatsApp call.
+
+The first successful target is AUDIO ONLY. Video is a later project and must not block the audio milestone.
+
+NON-NEGOTIABLE RULES
+--------------------
+1. Never commit WhatsApp auth state, session IDs, API keys, tokens, call recordings, or private phone numbers.
+2. Do not make CODY answer every incoming call automatically at the beginning. Use an allowlist and a manual or clearly enabled auto-answer mode.
+3. Every stage must be testable independently before combining it with the next stage.
+4. Keep a fixed fallback response and a call timeout so a broken AI provider cannot hold a call forever.
+5. Treat recordings and transcripts as sensitive. Store nothing by default.
+6. Prefer local/free software first. A service with a free tier is not the same as a service that is free forever.
+7. No production claim is valid until a real phone-to-bot call passes the acceptance tests in this document.
+
+CURRENT STARTING POINT
+----------------------
+As checked on 2026-11-27:
+
+- crysnovax/baileys main is commit fb2dd27e865299060343bb0d655c6601e2c14de8.
+- The package version on that branch is 2.2.13.
+- The repository contains a VOIP runtime under lib/Call/.
+- The current VOIP surface includes VoipClient, ActiveCall, incomingCall events, answerIncomingCall(), rejectIncomingCall(), inbound audio events, live Float32 PCM audio sources, audio recording helpers, and video upgrade support.
+- CODY main contains a .voipready command that prepares a connected VoipClient and provides controlled evaluation snippets for setup, answering, video upgrade, and cleanup.
+- tinyasr is a Rust speech-recognition library with native and WebAssembly targets. Its documented features include streaming recognition, partial re-decodes, punctuation, word timestamps, Silero VAD, and end-of-turn support.
+
+These facts describe available code, not production reliability. The VOIP path still requires real phone testing.
+
+SYSTEM ARCHITECTURE
+--------------------
+
+                    WhatsApp caller's phone
+                              |
+                         WhatsApp call
+                              |
+                 CODY server: Plogme VoIP/WASM
+                              |
+             ActiveCall emits inbound Float32 PCM
+                              |
+                    tinyasr streaming adapter
+                              |
+              partial / commit / turn_end events
+                              |
+                    CODY turn controller
+                              |
+                  LLM or deterministic reply
+                              |
+                         TTS adapter
+                              |
+       16 kHz mono Float32 PCM Node Readable stream
+                              |
+                  Plogme AudioFeeder / WASM
+                              |
+                         WhatsApp caller
+
+The modules must communicate through small interfaces. Do not let WhatsApp, tinyasr, an LLM, and a TTS provider call each other's internals directly.
+
+CORE INTERFACES
+---------------
+
+Incoming call controller:
+
+  voip.on('incomingCall', async (info) => {
+      // Check allowlist and current call capacity.
+      const call = await voip.answerIncomingCall(info.callId, {
+          audioSource: outboundPcmStream
+      });
+      call.on('audio', (pcm) => asr.push(pcm));
+      call.on('ended', cleanup);
+  });
+
+ASR adapter contract:
+
+  asr.start({ sampleRate, channels, language });
+  asr.push(float32PcmFrame);
+  asr.on('partial', event => ...);
+  asr.on('commit', event => ...);
+  asr.on('turnEnd', event => ...);
+  asr.stop();
+
+The adapter must document the exact PCM format. Do not silently assume the negotiated call rate. If the call output is not 16 kHz mono, resample before tinyasr.
+
+TTS adapter contract:
+
+  const outboundPcmStream = new PassThrough();
+  await tts.speak(text, {
+      format: 'f32le',
+      sampleRate: 16000,
+      channels: 1,
+      onChunk: chunk => outboundPcmStream.write(chunk)
+  });
+  outboundPcmStream.end();
+
+The production version should use a reusable bounded queue or stream that survives several responses during one call. It must not buffer an unlimited amount of audio.
+
+TURN-TAKING RULES
+-----------------
+
+- Partial ASR text is for display, intent hints, and interruption detection only.
+- Only a committed phrase or end-of-turn event may trigger a response.
+- A response must have a maximum character and audio duration limit.
+- If the caller speaks while CODY is speaking, stop or duck TTS and return to listening.
+- Ignore tiny fragments such as one noisy word unless they match a configured wake/interrupt rule.
+- If ASR confidence or language detection is uncertain, ask the caller to repeat instead of inventing meaning.
+- Do not send WhatsApp text messages for every ASR update. The call is the primary channel.
+
+FREE-FIRST STACK
+----------------
+
+Free/open-source components to prefer:
+
+- GitHub private repository for design notes and source control.
+- Node.js and the existing CODY runtime.
+- crysnovax/baileys VOIP/WASM implementation.
+- tinyasr native or WASM build for streaming speech recognition.
+- FFmpeg for conversion and resampling where needed.
+- Existing local audio tools and Node streams.
+- A local TTS engine if it is fast enough on the chosen server.
+- Existing free-tier TTS APIs only as development fallbacks, with quota and privacy limits recorded.
+
+Potential costs that are not guaranteed to be zero:
+
+- VPS, Render, Railway, or other always-on hosting.
+- GPU or high-CPU hosting if local ASR/TTS is too slow.
+- Commercial LLM or TTS quotas.
+- WhatsApp account and connectivity costs.
+- Storage and bandwidth if recordings are enabled.
+
+The first proof can be done without paid AI APIs: answer a call, transcribe a fixed phrase with tinyasr, and reply with a fixed prerecorded or locally generated sentence. Add LLM reasoning only after the media loop works.
+
+IMPLEMENTATION STAGES
+---------------------
+
+Stage 0 - Documentation and safety
+
+Deliverables:
+- This plan.
+- A secrets policy and .gitignore.
+- A call test log template.
+- A decision log.
+
+Exit condition:
+- Nobody can accidentally commit auth state, API credentials, or recordings.
+
+Stage 1 - VOIP smoke test
+
+Goal:
+- Prove that CODY can initialize the WASM runtime and survive a real incoming call.
+
+Steps:
+- Run the existing .voipready setup path.
+- Use a normal phone to call the CODY WhatsApp number.
+- Confirm incomingCall information is logged.
+- Answer manually.
+- Confirm connected and ended events.
+- Hang up from the phone and confirm cleanup.
+
+Exit condition:
+- Five calls complete without a stuck active call, duplicate socket, or required session reset.
+
+Stage 2 - Audio transport only
+
+Goal:
+- Prove both directions before involving ASR or an LLM.
+
+Steps:
+- Play a known short WAV or generated tone into the call.
+- Capture inbound audio frames from ActiveCall.
+- Record a short diagnostic file only in a local ignored directory.
+- Check sample rate, channels, frame size, underflow, overflow, and call latency.
+
+Exit condition:
+- The caller hears the test audio and the server receives intelligible caller audio.
+
+Stage 3 - tinyasr adapter
+
+Goal:
+- Convert call PCM frames to live transcript events.
+
+Steps:
+- Confirm tinyasr native/WASM build choice.
+- Expose session_new, session_push, session_finish, and event JSON through a small Node adapter.
+- Map tinyasr partial, commit, language, and end-of-turn events to the CODY interface.
+- Test with recorded PCM before testing live calls.
+
+Exit condition:
+- A phone caller says five known sentences and CODY logs correct committed text with acceptable delay.
+
+Stage 4 - Fixed-response voice bot
+
+Goal:
+- Close the loop without an LLM.
+
+Steps:
+- On a committed phrase, map known test phrases to known responses.
+- Convert each response to the negotiated outbound PCM format.
+- Stream it through the call.
+- Add barge-in detection and a maximum response duration.
+
+Exit condition:
+- The phone caller speaks a phrase and hears the correct response repeatedly for ten turns.
+
+Stage 5 - CODY reasoning
+
+Goal:
+- Replace the fixed phrase map with the existing CODY/LLM response path.
+
+Steps:
+- Add a call-specific conversation state with a strict context limit.
+- Keep phone-call prompts separate from normal chat history unless explicitly requested.
+- Add timeout, fallback, and provider-error responses.
+- Never expose raw provider errors to the caller.
+
+Exit condition:
+- CODY answers a small approved test script correctly without runaway repetition or overlapping speech.
+
+Stage 6 - Reliability and privacy
+
+Goal:
+- Make the call loop safe enough for a controlled beta.
+
+Steps:
+- Allowlist callers.
+- Limit simultaneous calls.
+- Add reconnect and stale-call cleanup.
+- Add call duration and cost limits.
+- Add metrics without recording content by default.
+- Add an emergency hangup command.
+- Test process restart during ringing, active audio, TTS, and disconnect.
+
+Exit condition:
+- A 30-minute controlled test produces no stuck resource, unbounded queue, or credential leak.
+
+Stage 7 - Video research and prototype
+
+Goal:
+- Only after audio is stable, investigate video.
+
+Requirements:
+- A real camera or video-frame source.
+- NV12 frame generation at the negotiated dimensions and rate.
+- Video upgrade handshake testing.
+- A vision model or frame analysis policy.
+- Clear privacy indicators and no silent camera activation.
+
+The existing video test pattern is not a real camera integration.
+
+PHONE-ONLY TEST PROCEDURE
+-------------------------
+
+A laptop is not required as the calling device. The bot runtime must run on a server or computer, but the human tester can use only a phone.
+
+Setup:
+- Phone A: the caller's normal WhatsApp account.
+- CODY: a separate WhatsApp account running on the server.
+- Server logs visible through a safe terminal or log dashboard.
+- One approved caller number in the allowlist.
+- No call recording unless the test explicitly enables it.
+
+Test order:
+
+1. Call CODY from Phone A.
+2. Confirm the incoming call event.
+3. Answer using the controlled test command.
+4. Say: "CODY test one." Wait for the response.
+5. Say a longer sentence and measure when partial and committed events arrive.
+6. Interrupt CODY while it is speaking.
+7. Remain silent and confirm no endless response is generated.
+8. Hang up from the phone.
+9. Repeat with the server process restarted between calls.
+10. Record only the result, timing, error class, and commit hash.
+
+TEST LOG FIELDS
+---------------
+
+Date/time:
+Commit:
+Baileys version:
+CODY version:
+Server/runtime:
+Phone/network:
+Caller allowlisted: yes/no
+Incoming call detected: yes/no
+Answer succeeded: yes/no
+Connected event: yes/no
+Inbound PCM received: yes/no
+ASR partial received: yes/no
+ASR commit received: yes/no
+TTS generated: yes/no
+Caller heard response: yes/no
+Barge-in worked: yes/no
+Clean hangup: yes/no
+Error:
+Next action:
+
+KNOWN RISKS
+-----------
+
+1. WhatsApp protocol and WebRTC behavior can change without notice.
+2. The VOIP WASM assets must match the runtime expected by the implementation.
+3. A linked WhatsApp session is a credential and must be protected.
+4. Android/Termux is not the same environment as the server and may not support the native WebRTC dependency reliably.
+5. ASR partial text is unstable and must not trigger repeated replies.
+6. TTS latency can make the conversation feel broken even when every API succeeds.
+7. Network jitter can cause audio underflow, overlap, or call termination.
+8. Free API quotas can disappear or change terms.
+9. tinyasr is GPLv3-or-later, including its model files. Review license obligations before distributing a combined product.
+10. A call bot handles voice data. Obtain any consent required for recording, transcription, or processing in the jurisdictions where it operates.
+
+DEFINITION OF SUCCESS
+---------------------
+
+The first meaningful success is not video and not a fully autonomous agent. It is:
+
+A real person uses a phone to call CODY. CODY answers. CODY receives intelligible speech. tinyasr produces a committed transcript. CODY produces a bounded response. TTS is streamed back into the same call. The caller hears it. The call ends cleanly. The complete loop works ten times in a row under a controlled test.
+
+Only after that should we call the system a voice assistant.
+
+REFERENCES
+----------
+
+- https://github.com/crysnovax/baileys
+- https://github.com/crysnovax/tinyasr
+- https://github.com/crysnovax/CODY
+- https://baileys.wiki/advanced/calls
+- https://github.com/SheIITear/baileys-caller
+- https://github.com/wavoip/voice-calls-baileys
