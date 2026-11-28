@@ -1,5 +1,5 @@
 {
-  "name": "@crysnova/voip-plogme",
+  "name": "voip-plogme",
   "version": "0.0.1",
   "private": true,
   "type": "module",

@@ -8,10 +8,10 @@
     ".": "./src/index.mjs"
   },
   "dependencies": {
-    "@crysnova/voip-core": "0.0.1",
-    "@crysnova/voip-plogme": "0.0.1",
-    "@crysnova/voip-tinyasr": "0.0.1",
-    "@crysnova/voip-tts": "0.0.1"
+    "voip-core": "0.0.1",
+    "voip-plogme": "0.0.1",
+    "voip-tinyasr": "0.0.1",
+    "voip-tts": "0.0.1"
   },
   "peerDependencies": {
     "plogme": ">=2.2.11"

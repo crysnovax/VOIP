@@ -38,7 +38,7 @@ This gives us one codebase to maintain and one primary package to document, whil
 
 ## Internal layers
 
-### Layer 1: `@crysnova/voip-core`
+### Layer 1: `voip-core`
 
 This is the reusable engine. It should contain call-local state, lifecycle events, turn coordination, interruption rules, bounded PCM queues, timeouts, and adapter contracts.
 
@@ -46,7 +46,7 @@ It should not know about CODY, WhatsApp, Plogme, tinyasr, a particular LLM, or a
 
 This is currently represented by the private package skeleton in this repository. It is an internal workspace first, not a separate public release.
 
-### Layer 2: `@crysnova/voip-plogme`
+### Layer 2: `voip-plogme`
 
 This is the WhatsApp/Plogme transport adapter. It translates the reusable core's operations into the actual Plogme/Baileys VOIP API: incoming calls, outgoing calls, answering, rejecting, inbound Float32 PCM, and outbound audio streams.
 
@@ -56,7 +56,7 @@ It may use Plogme as a dependency because this layer is intentionally Plogme-spe
 
 Examples include:
 
-- `@crysnova/voip-tinyasr` for tinyasr recognition.
+- `voip-tinyasr` for tinyasr recognition.
 - A local TTS adapter.
 - A provider-specific TTS adapter if needed.
 - A CODY response adapter, which should probably remain inside CODY because it knows CODY's session, history, personality, and commands.

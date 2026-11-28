@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { PcmNormalizer } from '@crysnova/voip-core';
-import { PlogmeTransport } from '@crysnova/voip-plogme';
-import { TinyAsrAdapter } from '@crysnova/voip-tinyasr';
-import { TtsAdapter } from '@crysnova/voip-tts';
+import { PcmNormalizer } from 'voip-core';
+import { PlogmeTransport } from 'voip-plogme';
+import { TinyAsrAdapter } from 'voip-tinyasr';
+import { TtsAdapter } from 'voip-tts';
 
 test('tinyasr adapter normalizes JSON commit words and end-of-turn events', () => {
   const adapter = new TinyAsrAdapter({ sessionFactory: () => ({

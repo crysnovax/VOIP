@@ -1,4 +1,4 @@
-# @crysnova/voip-tinyasr
+# voip-tinyasr
 
 This package now includes a real Node WebAssembly adapter for crysnovax/tinyasr.
 
@@ -15,7 +15,7 @@ The model and VAD files may remain gzip-compressed. The adapter decompresses the
 ## Usage
 
 ```js
-import { createTinyAsrWasmAdapter } from '@crysnova/voip-tinyasr';
+import { createTinyAsrWasmAdapter } from 'voip-tinyasr';
 
 const asr = await createTinyAsrWasmAdapter({
   wasmPath: '/opt/tinyasr/web/tinyasr.wasm',

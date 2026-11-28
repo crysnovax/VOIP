@@ -2,7 +2,7 @@
 
 ## Recommendation
 
-Do not publish an NPM package yet. First create a private, local package inside this repository named `@crysnova/voip-core`. It will contain only pure call-session logic and a bounded PCM queue. It will not depend on Baileys, tinyasr, CODY, an LLM, or a TTS provider.
+Do not publish an NPM package yet. First create a private, local package inside this repository named `voip-core`. It will contain only pure call-session logic and a bounded PCM queue. It will not depend on Baileys, tinyasr, CODY, an LLM, or a TTS provider.
 
 Publishing too early would freeze an API before we know the real media formats and call lifecycle. The internal package gives us a clean structure without creating distribution work.
 
@@ -23,7 +23,7 @@ The existing projects provide powerful pieces, but they have different responsib
 
 ## Immediate sequence
 
-1. Test the pure `@crysnova/voip-core` package.
+1. Test the pure `voip-core` package.
 2. Add fake ASR/TTS/transport adapters and run a deterministic audio-loop simulation.
 3. Add a tinyasr adapter behind the same interface.
 4. Add a Baileys transport adapter that can later be called by CODY without replacing CODY's session.
@@ -34,9 +34,9 @@ The existing projects provide powerful pieces, but they have different responsib
 
 If the core becomes useful outside this repository, publish it only after the API has survived real calls. A possible future split is:
 
-- `@crysnova/voip-core`: call state, events, queue, contracts.
-- `@crysnova/voip-baileys`: Baileys transport adapter.
-- `@crysnova/voip-tinyasr`: tinyasr adapter.
-- `@crysnova/voip-tts-*`: provider-specific adapters.
+- `voip-core`: call state, events, queue, contracts.
+- `voip-plogme`: Baileys transport adapter.
+- `voip-tinyasr`: tinyasr adapter.
+- `voip-tts-*`: provider-specific adapters.
 
 These are future boundaries, not four packages to build now.

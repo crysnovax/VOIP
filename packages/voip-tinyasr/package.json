@@ -1,5 +1,5 @@
 {
-  "name": "@crysnova/voip-tinyasr",
+  "name": "voip-tinyasr",
   "version": "0.0.1",
   "private": true,
   "type": "module",

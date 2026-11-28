@@ -1,9 +1,9 @@
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
-import { CallSession, PcmNormalizer } from '@crysnova/voip-core';
-import { PlogmeTransport } from '@crysnova/voip-plogme';
-import { TinyAsrAdapter } from '@crysnova/voip-tinyasr';
-import { TtsAdapter } from '@crysnova/voip-tts';
+import { CallSession, PcmNormalizer } from 'voip-core';
+import { PlogmeTransport } from 'voip-plogme';
+import { TinyAsrAdapter } from 'voip-tinyasr';
+import { TtsAdapter } from 'voip-tts';
 
 const writeChunk = async (stream, chunk) => {
   if (stream.destroyed) throw new Error('Call audio stream is closed.');
@@ -197,7 +197,7 @@ export class PlogmeVoip extends EventEmitter {
 }
 
 export const createPlogmeVoip = options => new PlogmeVoip(options);
-export { PlogmeTransport } from '@crysnova/voip-plogme';
-export { TinyAsrAdapter, TinyAsrWasmModel, TinyAsrWasmSession, TinyAsrWasmAdapter, createTinyAsrWasmAdapter } from '@crysnova/voip-tinyasr';
-export { TtsAdapter } from '@crysnova/voip-tts';
-export { CallSession, BoundedPcmQueue, PcmNormalizer, pcmFormat } from '@crysnova/voip-core';
+export { PlogmeTransport } from 'voip-plogme';
+export { TinyAsrAdapter, TinyAsrWasmModel, TinyAsrWasmSession, TinyAsrWasmAdapter, createTinyAsrWasmAdapter } from 'voip-tinyasr';
+export { TtsAdapter } from 'voip-tts';
+export { CallSession, BoundedPcmQueue, PcmNormalizer, pcmFormat } from 'voip-core';
