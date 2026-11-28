@@ -33,7 +33,7 @@
 - **Date:** 2026-11-27
 - **Decision:** Make VOIP reusable through a layered design: a provider-neutral core, a Plogme/WhatsApp transport adapter, optional ASR/TTS adapters, and a thin CODY integration layer.
 - **Alternatives considered:** One large public package containing CODY logic, Plogme, tinyasr, TTS, and all provider code; or copying VOIP code into each bot.
-- **Reason:** Other bots should reuse the call capability without importing CODY-specific behavior, while CODY remains the session and response owner. Do not publish until real phone tests validate the contracts.
+- **Reason:** Other bots should reuse the call capability without importing CODY-specific behavior, while CODY remains the session and response owner. The four reusable layers may be published as beta packages, but the umbrella facade remains gated on real phone validation.
 - **Evidence:** Package strategy documented in `docs/PACKAGE_STRATEGY.md`.
 - **Revisit when:** The first real CODY integration and transport adapter are working.
 

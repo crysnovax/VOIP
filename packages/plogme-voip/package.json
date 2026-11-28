@@ -8,10 +8,10 @@
     ".": "./src/index.mjs"
   },
   "dependencies": {
-    "voip-core": "0.0.1",
-    "voip-plogme": "0.0.1",
-    "voip-tinyasr": "0.0.1",
-    "voip-tts": "0.0.1"
+    "voip-core": "0.1.0-beta.0",
+    "voip-plogme": "0.1.0-beta.0",
+    "voip-tinyasr": "0.1.0-beta.0",
+    "voip-tts": "0.1.0-beta.0"
   },
   "peerDependencies": {
     "plogme": ">=2.2.11"

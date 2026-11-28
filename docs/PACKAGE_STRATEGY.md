@@ -6,7 +6,7 @@ Yes, the VOIP capability can and should become reusable. The mistake would be pu
 
 ## Recommended structure: one repository, one main package, internal layers
 
-The four layers do not need to become four separate repositories or four packages that CODY installs manually. We will keep them in one VOIP repository so one AI coding session can inspect, test, and fix the entire system together.
+The four layers now have independent NPM-ready repositories and beta releases, while this VOIP repository remains the coordinated development and debugging workspace. CODY should normally consume the umbrella facade rather than importing four low-level packages directly.
 
 The repository can use internal workspaces:
 
@@ -20,7 +20,7 @@ VOIP/
 └── packages/plogme-voip/     <- public-facing umbrella/facade package
 ```
 
-At the beginning, the internal packages can remain private workspace modules. They do not all need separate NPM releases.
+The central workspace keeps development copies of the four layers. The corresponding independent repositories are the publishable artifacts and are kept version-aligned with these workspace copies.
 
 The main installable package will be `plogme-voip` (or the final scoped name we choose). It connects the internal layers, exposes a simple API to CODY, and keeps CODY from importing four low-level packages directly.
 
@@ -44,7 +44,7 @@ This is the reusable engine. It should contain call-local state, lifecycle event
 
 It should not know about CODY, WhatsApp, Plogme, tinyasr, a particular LLM, or a particular TTS provider. Any bot should be able to use this layer if it can provide the required adapters.
 
-This is currently represented by the private package skeleton in this repository. It is an internal workspace first, not a separate public release.
+This repository contains the development workspace copy; the independently maintained `voip-core` repository is the public beta package source.
 
 ### Layer 2: `voip-plogme`
 
@@ -85,24 +85,21 @@ The actual function names will be decided after the first real integration. This
 
 ## Should the umbrella package be public?
 
-Eventually, yes, if the umbrella API survives real calls and the licensing is understood. Other bots should be able to install one package without seeing CODY's private code.
+The four lower-level layers are now published as `0.1.0-beta.0` releases for experimentation. The umbrella `plogme-voip` package remains private in this repository until the complete facade has passed real phone tests and its public API is stable.
 
-Now, no. The current VOIP API is still experimental because the Plogme VOIP behavior, PCM formats, outgoing-call method, tinyasr bridge, and TTS streaming path have not passed real phone tests. Publishing now would create a public promise around guesses.
+The current release state is:
 
-The staged release path is:
-
-1. One private repository with internal layers and fake adapters.
-2. One local `plogme-voip` facade used by CODY.
-3. Real phone smoke tests.
-4. A small `0.1.0-beta` release of the umbrella package if the facade is stable.
-5. Public documentation and examples.
-6. Publish individual internal layers only when another real user needs them independently.
+1. One central VOIP repository with coordinated workspace copies and tests.
+2. Four independent beta packages: `voip-core`, `voip-plogme`, `voip-tinyasr`, and `voip-tts`.
+3. The local `plogme-voip` facade used by CODY.
+4. Real phone smoke tests remain the gate before publishing the umbrella facade.
+5. Public documentation and examples can now be expanded around the released lower-level packages.
 
 Public NPM publication itself can be free. Hosting, AI APIs, and always-on execution are separate cost questions.
 
 ## Why not maintain four separate repositories?
 
-A single monorepo with a facade is easier for our current budget and AI-credit limits than four separate repositories. One agent can inspect the entire call path, run one test command, and fix a cross-layer bug without cloning and understanding four projects.
+A coordinated monorepo with a facade is easier for our current budget and AI-credit limits than maintaining four unrelated codebases, even though the four reusable layers also have independent repositories for publication. One agent can inspect the entire call path, run one test command, and fix a cross-layer bug without cloning and understanding four projects.
 
 The facade should not hide the internal boundaries in the source code. It only hides them from normal consumers such as CODY.
 

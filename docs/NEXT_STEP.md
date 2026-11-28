@@ -2,7 +2,7 @@
 
 ## Recommendation
 
-Do not publish an NPM package yet. First create a private, local package inside this repository named `voip-core`. It will contain only pure call-session logic and a bounded PCM queue. It will not depend on Baileys, tinyasr, CODY, an LLM, or a TTS provider.
+The four reusable beta packages are now published. Continue using the coordinated local workspace copy inside this repository for cross-layer development and testing. It will contain only pure call-session logic and a bounded PCM queue. It will not depend on Baileys, tinyasr, CODY, an LLM, or a TTS provider.
 
 Publishing too early would freeze an API before we know the real media formats and call lifecycle. The internal package gives us a clean structure without creating distribution work.
 

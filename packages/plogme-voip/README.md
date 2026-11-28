@@ -1,6 +1,6 @@
 # plogme-voip
 
-Reusable WhatsApp VoIP capability for CODY and compatible bots. This package is currently a private beta inside the `crysnovax/VOIP` monorepo.
+Reusable WhatsApp VoIP capability for CODY and compatible bots. The umbrella package is currently a private beta inside the `crysnovax/VOIP` monorepo. Its four reusable lower-level dependencies are published as `0.1.0-beta.0` packages.
 
 ## Ownership
 

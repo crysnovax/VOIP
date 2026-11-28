@@ -1,6 +1,6 @@
 {
   "name": "voip-core",
-  "version": "0.0.1",
+  "version": "0.1.0-beta.0",
   "private": true,
   "type": "module",
   "description": "Provider-neutral call-local state and audio queue primitives",
