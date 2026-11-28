@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import { PcmNormalizer } from '@crysnova/voip-core';
 import { PlogmeTransport } from '@crysnova/voip-plogme';
 import { TinyAsrAdapter } from '@crysnova/voip-tinyasr';
 import { TtsAdapter } from '@crysnova/voip-tts';
@@ -27,6 +28,24 @@ test('TTS adapter accepts a Float32 PCM iterable', async () => {
   for await (const chunk of tts.stream('hello')) chunks.push(chunk);
   assert.equal(chunks.length, 1);
   assert.equal(chunks[0].byteLength, 8);
+});
+
+test('PCM normalizer downmixes stereo and converts 48 kHz to 16 kHz', () => {
+  const normalizer = new PcmNormalizer({ inputSampleRate: 48000, inputChannels: 2 });
+  const first = normalizer.push(new Float32Array([
+    1, 0, 1, 0, 1, 0, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0
+  ]));
+  const second = normalizer.push(new Float32Array([
+    1, 0, 1, 0, 1, 0, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0
+  ]));
+  const tail = normalizer.flush();
+  const output = Float32Array.from([...first, ...second, ...tail]);
+  assert.equal(output.length, 8);
+  assert.ok([...output].every(sample => Math.abs(sample - 0.5) < 1e-6));
 });
 
 test('Plogme transport delegates to an injected VoipClient', async () => {

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
-import { CallSession } from '@crysnova/voip-core';
+import { CallSession, PcmNormalizer } from '@crysnova/voip-core';
 import { PlogmeTransport } from '@crysnova/voip-plogme';
 import { TinyAsrAdapter } from '@crysnova/voip-tinyasr';
 import { TtsAdapter } from '@crysnova/voip-tts';
@@ -47,6 +47,7 @@ export class PlogmeVoip extends EventEmitter {
     responseTimeoutMs = 12000,
     maxResponseChars = 2000,
     durationMs = 120000,
+    audioFormat = { sampleRate: 16000, channels: 1 },
   } = {}) {
     super();
     if (!transport) throw new TypeError('plogme-voip requires a transport.');
@@ -59,6 +60,7 @@ export class PlogmeVoip extends EventEmitter {
     this.responseTimeoutMs = responseTimeoutMs;
     this.maxResponseChars = maxResponseChars;
     this.durationMs = durationMs;
+    this.audioFormat = audioFormat;
     this.active = null;
     this.started = false;
     this._onIncoming = info => void this._handleIncoming(info);
@@ -91,7 +93,7 @@ export class PlogmeVoip extends EventEmitter {
       durationMs: options.durationMs ?? this.durationMs,
     });
     session.connect();
-    return this._attach({ info, activeCall, audio, session });
+    return this._attach({ info, activeCall, audio, session, audioFormat: options.audioFormat ?? info.audioFormat ?? this.audioFormat });
   }
 
   async call(phoneNumber, options = {}) {
@@ -103,7 +105,7 @@ export class PlogmeVoip extends EventEmitter {
       audioSource: audio,
       durationMs: options.durationMs ?? this.durationMs,
     });
-    return this._attach({ info: { callId: activeCall.callId, peerJid: activeCall.peerJid, phoneNumber }, activeCall, audio, session });
+    return this._attach({ info: { callId: activeCall.callId, peerJid: activeCall.peerJid, phoneNumber }, activeCall, audio, session, audioFormat: options.audioFormat ?? this.audioFormat });
   }
 
   async _handleIncoming(info) {
@@ -122,12 +124,18 @@ export class PlogmeVoip extends EventEmitter {
     }
   }
 
-  _attach({ info, activeCall, audio, session }) {
+  _attach({ info, activeCall, audio, session, audioFormat }) {
     if (this.active) {
       activeCall.end?.();
       throw new Error('A VOIP call is already active.');
     }
-    this.active = { info, activeCall, audio, session, asrSession: null, responseBusy: false };
+    const normalizer = new PcmNormalizer({
+      inputSampleRate: audioFormat.sampleRate,
+      inputChannels: audioFormat.channels,
+      outputSampleRate: 16000,
+      outputChannels: 1,
+    });
+    this.active = { info, activeCall, audio, session, normalizer, asrSession: null, responseBusy: false };
     session.on('state', event => this.emit('state', event));
     activeCall.on('connected', () => session.connected());
     activeCall.on('ended', reason => void this._cleanup(reason));
@@ -142,8 +150,9 @@ export class PlogmeVoip extends EventEmitter {
 
   _onAudio(pcm) {
     if (!this.active?.asrSession) return;
-    this.active.asrSession.push(pcm);
-    this.emit('audio', pcm);
+    const normalized = this.active.normalizer.push(pcm);
+    if (normalized.length > 0) this.active.asrSession.push(normalized);
+    this.emit('audio', normalized);
   }
 
   async _onTurn(event) {
@@ -177,6 +186,9 @@ export class PlogmeVoip extends EventEmitter {
     const call = this.active;
     if (!call) return;
     this.active = null;
+    const tail = call.normalizer.flush();
+    if (tail.length > 0) call.asrSession?.push?.(tail);
+    call.asrSession?.finish?.();
     call.asrSession?.stop?.();
     call.audio.destroy();
     if (call.session.state !== 'ended' && call.session.state !== 'failed') call.session.end(reason);
@@ -188,4 +200,4 @@ export const createPlogmeVoip = options => new PlogmeVoip(options);
 export { PlogmeTransport } from '@crysnova/voip-plogme';
 export { TinyAsrAdapter, TinyAsrWasmModel, TinyAsrWasmSession, TinyAsrWasmAdapter, createTinyAsrWasmAdapter } from '@crysnova/voip-tinyasr';
 export { TtsAdapter } from '@crysnova/voip-tts';
-export { CallSession, BoundedPcmQueue } from '@crysnova/voip-core';
+export { CallSession, BoundedPcmQueue, PcmNormalizer, pcmFormat } from '@crysnova/voip-core';

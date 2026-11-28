@@ -25,6 +25,7 @@ const transport = createPlogmeTransport({
 
 const voip = createPlogmeVoip({
   transport,
+  audioFormat: { sampleRate: 48000, channels: 2 },
   asr: createTinyAsrAdapter({
     sessionFactory: ({ sampleRate, channels, language }) => createTinyAsrSession({ sampleRate, channels, language })
   }),
@@ -38,6 +39,8 @@ const voip = createPlogmeVoip({
 
 await voip.start();
 ```
+
+`audioFormat` describes the inbound call PCM before normalization. The facade converts it to mono 16 kHz Float32 PCM for tinyasr. If the transport exposes a different negotiated format for a particular call, pass `audioFormat` to `answer()` or `call()` for that call.
 
 The names `createTinyAsrSession`, `codyTtsAsFloat32Stream`, `codyCallerPolicy`, and `codyRespond` are supplied by the consuming application. They are not hidden CODY dependencies.
 

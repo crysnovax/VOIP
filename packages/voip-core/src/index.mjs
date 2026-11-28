@@ -80,3 +80,5 @@ export class BoundedPcmQueue {
     this.bytes = 0;
   }
 }
+
+export { PcmNormalizer, pcmFormat } from './pcm.mjs';
